@@ -1,0 +1,11 @@
+# Robots.txt for Truck Parts Depot Auto
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# Crawl-delay for polite bot scraping
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: /sitemap.xml

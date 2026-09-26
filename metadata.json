@@ -1,0 +1,6 @@
+{
+  "name": "Truck Parts Depot Auto",
+  "description": "Selling Quality Car & Truck Spare Parts Since 2012. Heavy-duty OEM remanufactured turbochargers, transmissions, and diesel injectors for Dodge Ram Cummins, Ford Powerstroke, and GMC Duramax.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

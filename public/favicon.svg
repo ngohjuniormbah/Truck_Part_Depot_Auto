@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Solid Black Background with Rounded Squircle -->
+  <rect width="128" height="128" rx="28" fill="#000000" />
+  
+  <!-- Subtle High-Contrast White Perimeter Accent -->
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.25" />
+
+  <!-- Clean Heavy Duty Truck Silhouette in Pure White & Black -->
+  <g fill="#FFFFFF">
+    <!-- Cab Roof & Marker Lights -->
+    <path d="M40 22h48l12 18H28l12-18z" />
+    <circle cx="50" cy="18" r="2" />
+    <circle cx="57" cy="17" r="2" />
+    <circle cx="64" cy="17" r="2" />
+    <circle cx="71" cy="17" r="2" />
+    <circle cx="78" cy="18" r="2" />
+
+    <!-- Windshield cutout in black for optical pop -->
+    <path d="M42 26h44l9 12H33l9-12z" fill="#000000" />
+
+    <!-- Main Hood / Grill Frame -->
+    <rect x="26" y="44" width="76" height="40" rx="6" />
+
+    <!-- Billet Grill Inner Cutout -->
+    <rect x="34" y="49" width="60" height="30" rx="4" fill="#000000" />
+    
+    <!-- Heavy Duty Chrome Grill Bars in White -->
+    <line x1="34" y1="56" x2="94" y2="56" stroke="#FFFFFF" stroke-width="2.5" />
+    <line x1="34" y1="64" x2="94" y2="64" stroke="#FFFFFF" stroke-width="2.5" />
+    <line x1="34" y1="72" x2="94" y2="72" stroke="#FFFFFF" stroke-width="2.5" />
+    <line x1="49" y1="49" x2="49" y2="79" stroke="#FFFFFF" stroke-width="2.5" />
+    <line x1="64" y1="49" x2="64" y2="79" stroke="#FFFFFF" stroke-width="3.5" />
+    <line x1="79" y1="49" x2="79" y2="79" stroke="#FFFFFF" stroke-width="2.5" />
+
+    <!-- Powerful Dual Headlights -->
+    <rect x="28" y="52" width="4" height="18" rx="1.5" fill="#FFFFFF" />
+    <rect x="96" y="52" width="4" height="18" rx="1.5" fill="#FFFFFF" />
+
+    <!-- Heavy Commercial Steel Bumper -->
+    <rect x="18" y="87" width="92" height="16" rx="4" fill="#FFFFFF" />
+    
+    <!-- Bumper Cutouts & Tow Eyelets -->
+    <circle cx="32" cy="95" r="3.5" fill="#000000" />
+    <circle cx="96" cy="95" r="3.5" fill="#000000" />
+    <rect x="52" y="92" width="24" height="6" rx="2" fill="#000000" />
+
+    <!-- Heavy Tread Wheels -->
+    <rect x="22" y="104" width="14" height="8" rx="3" fill="#FFFFFF" />
+    <rect x="92" y="104" width="14" height="8" rx="3" fill="#FFFFFF" />
+  </g>
+</svg>
