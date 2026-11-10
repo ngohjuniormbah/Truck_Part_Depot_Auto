@@ -3,6 +3,7 @@ import { Star, ExternalLink, MessageSquare } from 'lucide-react';
 import { Review } from '../types';
 
 interface ReviewsPageProps {
+  isLoading?: boolean;
   reviews?: Review[];
   onAddReview?: (review: Partial<Review>) => Promise<void>;
   onNavigate?: (page: any, initialTab?: any) => void;
