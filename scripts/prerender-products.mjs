@@ -138,9 +138,17 @@ for (const route of pagePaths) {
   const routeFile = resolve(outputDir, route, 'index.html');
   await mkdir(dirname(routeFile), { recursive: true });
   await copyFile(resolve(outputDir, 'index.html'), routeFile);
+  if (route === 'checkout' || route === 'admin') {
+    const privateHtml = await readFile(routeFile, 'utf8');
+    const robotsTag = '<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />';
+    await writeFile(routeFile, privateHtml.replace(robotsTag, '<meta name="robots" content="noindex, nofollow" />'), 'utf8');
+  }
 }
 
 const products = await fetchProducts();
+if (process.env.VERCEL && products && products.length === 0) {
+  throw new Error('The production product query returned zero rows. Refusing to deploy a product sitemap without product pages.');
+}
 const sitemapUrls = new Set([
   SITE_URL + '/', ...pagePaths.filter((path) => path !== 'checkout' && path !== 'admin').map((path) => SITE_URL + '/' + path),
 ]);
