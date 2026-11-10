@@ -14,7 +14,7 @@ export function slugify(value: string): string {
 /** Keep this URL format in sync with scripts/generate-sitemap.mjs. */
 export function getProductPath(product: Product): string {
   const identifier = product.oemNumber || product.sku || product.id;
-  return \`/products/\${slugify(product.name)}-\${slugify(identifier)}-\${slugify(product.id)}\`;
+  return '/products/' + slugify(product.name) + '-' + slugify(identifier) + '-' + slugify(product.id);
 }
 
 type PageMetadata = { title: string; description: string };
@@ -63,7 +63,7 @@ const PAGE_METADATA: Partial<Record<NavPage, PageMetadata>> = {
 };
 
 function setMeta(attribute: 'name' | 'property', key: string, content: string): void {
-  let element = document.head.querySelector<HTMLMetaElement>(\`meta[\${attribute}="\${key}"]\`);
+  let element = document.head.querySelector<HTMLMetaElement>('meta[' + attribute + '="' + key + '"]');
   if (!element) {
     element = document.createElement('meta');
     element.setAttribute(attribute, key);
@@ -85,13 +85,13 @@ function setCanonical(url: string): void {
 export function updatePageMetadata(page: NavPage, product?: Product | null): void {
   const metadata: PageMetadata = product
     ? {
-        title: \`\${product.name} | \${product.brand} Truck Parts | Truck Parts Depot Auto\`,
+        title: product.name + ' | ' + product.brand + ' Truck Parts | Truck Parts Depot Auto',
         description: [
           product.name,
           product.brand,
           product.model,
           product.engine,
-          product.oemNumber ? \`OEM \${product.oemNumber}\` : '',
+          product.oemNumber ? 'OEM ' + product.oemNumber : '',
           product.description,
         ].filter(Boolean).join(' — '),
       }
@@ -103,9 +103,9 @@ export function updatePageMetadata(page: NavPage, product?: Product | null): voi
       : PAGE_METADATA[page] || PAGE_METADATA.home!;
 
   const path = product ? getProductPath(product) : (window.location.pathname || '/');
-  const canonicalUrl = \`\${SITE_URL}\${path}\`;
+  const canonicalUrl = SITE_URL + path;
   const description = metadata.description.length > 160
-    ? \`\${metadata.description.slice(0, 157).trimEnd()}...\`
+    ? metadata.description.slice(0, 157).trimEnd() + '...'
     : metadata.description;
   const robots = page === 'admin' || page === 'checkout' || (page === 'product-detail' && !product)
     ? 'noindex, nofollow'
