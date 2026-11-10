@@ -44,7 +44,9 @@ function cleanDescription(product) {
 
 async function fetchProducts() {
   if (!supabaseUrl || !supabaseKey) {
-    console.warn('Supabase public credentials missing: product prerender is skipped. Configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel.');
+    const message = 'Supabase public credentials missing: product prerender cannot run. Configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel.';
+    if (process.env.VERCEL) throw new Error(message);
+    console.warn(message);
     return null;
   }
 
