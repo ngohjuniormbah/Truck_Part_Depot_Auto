@@ -1,21 +1,10 @@
 import type { NavPage, Product } from '../types';
+import { getProductPath, slugify } from './seo-slugs.mjs';
+
+export { getProductPath, slugify } from './seo-slugs.mjs';
 
 export const SITE_URL = 'https://truckpartsdepotauto.com';
 
-export function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'part';
-}
-
-/** Keep this URL format in sync with scripts/generate-sitemap.mjs. */
-export function getProductPath(product: Product): string {
-  const identifier = product.oemNumber || product.sku || product.id;
-  return '/products/' + slugify(product.name) + '-' + slugify(identifier) + '-' + slugify(product.id);
-}
 
 type PageMetadata = { title: string; description: string };
 
