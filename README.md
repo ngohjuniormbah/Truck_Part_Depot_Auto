@@ -73,3 +73,7 @@ supabase secrets set \
 Set the same public key in the Vite/Vercel environment as `VITE_VAPID_PUBLIC_KEY`.
 
 Then open `/admin`, click **Enable Push Notifications**, and allow notifications in the browser. A checkout order will be sent to all subscribed admin browsers, including when the admin tab is not focused.
+
+## Google Analytics 4 (optional)
+
+Set `VITE_GA4_MEASUREMENT_ID` in the production environment to enable GA4. The storefront sends page views, `view_item`, `view_item_list`, `select_item`, `add_to_cart` and `begin_checkout` events. It does not send a `purchase` event because the current checkout creates orders with `Pending Verification` payment status; sending revenue before payment confirmation would be inaccurate. Review privacy notices and any applicable consent requirements before enabling analytics.
