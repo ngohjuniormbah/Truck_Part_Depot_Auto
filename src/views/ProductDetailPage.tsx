@@ -89,7 +89,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     '@type': 'Product',
     name: product.name,
     description: product.description || `${product.brand} ${product.model} heavy-duty truck part`,
-    image: photos.filter((url) => /^https?:\\/\\//i.test(url)),
+    image: photos.filter((url) => url.startsWith('https://') || url.startsWith('http://')),
     sku: product.sku,
     mpn: product.oemNumber || undefined,
     brand: { '@type': 'Brand', name: product.brand },
