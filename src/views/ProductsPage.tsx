@@ -1,11 +1,13 @@
 import React from 'react';
 import { Package, ChevronRight, ArrowRight, Search, X } from 'lucide-react';
 import { Product, TruckBrand, PartCategory, VehicleSelection, NavPage } from '../types';
+import { getProductPath } from '../utils/seo';
 import { SpotlightCard } from '../components/SpotlightCard';
 import { ProductAsideSections } from '../components/ProductAsideSections';
 
 interface ProductsPageProps {
   products: Product[];
+  isLoading?: boolean;
   selectedBrand?: TruckBrand;
   onSelectBrand?: (brand: TruckBrand) => void;
   selectedCategory?: PartCategory | 'All';
@@ -195,7 +197,17 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
                         {product.brand} &bull; {product.model}
                       </div>
                       <h3 className="text-sm font-bold text-neutral-950 leading-snug group-hover:text-black line-clamp-2">
-                        {product.name}
+                        <a
+                          href={getProductPath(product)}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            onSelectProduct(product);
+                          }}
+                          className="hover:underline focus-visible:underline"
+                        >
+                          {product.name}
+                        </a>
                       </h3>
                     </div>
                   </div>

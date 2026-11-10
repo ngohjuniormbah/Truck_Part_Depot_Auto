@@ -1,11 +1,7 @@
-# Robots.txt for Truck Parts Depot Auto
+# Public pages are crawlable; transactional pages are excluded from the sitemap.
 User-agent: *
 Allow: /
 Disallow: /admin
-Disallow: /api/
+Disallow: /admin/
 
-# Crawl-delay for polite bot scraping
-Crawl-delay: 1
-
-# Sitemap location
-Sitemap: /sitemap.xml
+Sitemap: https://truckpartsdepotauto.com/sitemap.xml

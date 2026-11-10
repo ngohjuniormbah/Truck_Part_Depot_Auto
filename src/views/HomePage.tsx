@@ -15,6 +15,7 @@ import { ProductAsideSections } from '../components/ProductAsideSections';
 
 interface HomePageProps {
   products: Product[];
+  isLoading?: boolean;
   reviews?: Review[];
   gallery?: GalleryItem[];
   selectedCategory?: PartCategory;

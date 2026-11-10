@@ -26,8 +26,10 @@ import { GalleryPage } from './views/GalleryPage';
 import { CheckoutPage } from './views/CheckoutPage';
 import { AdminPage } from './views/AdminPage';
 import { sendOrderPushNotification, playOrderChime } from './utils/notifications';
+import { getProductPath, updatePageMetadata } from './utils/seo';
+import { trackAnalyticsEvent, trackPageView } from './utils/analytics';
 
-function getInitialPage(): { page: NavPage; tab?: 'products' | 'gallery' | 'reviews' | 'orders' } {
+function getInitialPage(): { page: NavPage; tab?: 'products' | 'gallery' | 'reviews' | 'orders'; productSlug?: string } {
   if (typeof window === 'undefined') return { page: 'home' };
 
   const validPages: NavPage[] = [
@@ -57,6 +59,10 @@ function getInitialPage(): { page: NavPage; tab?: 'products' | 'gallery' | 'revi
     };
   }
 
+  if (pathParts[0] === 'products' && pathParts.length > 1) {
+    return { page: 'product-detail', productSlug: pathParts.slice(1).join('/') };
+  }
+
   for (const p of validPages) {
     if (pathParts.includes(p)) return { page: p };
   }
@@ -68,14 +74,8 @@ export default function App() {
   const initialRoute = getInitialPage();
   const [currentPage, setCurrentPage] = useState<NavPage>(initialRoute.page);
 
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(() => {
-    try {
-      const saved = sessionStorage.getItem('tpd_selected_product');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [requestedProductSlug, setRequestedProductSlug] = useState<string | null>(initialRoute.productSlug || null);
 
   const [selectedBrand, setSelectedBrand] = useState<'All' | 'Ford' | 'GMC' | 'Dodge / Ram'>('All');
   const [selectedCategory, setSelectedCategory] = useState<PartCategory | 'All'>('All');
@@ -89,6 +89,74 @@ export default function App() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Support native browser back/forward navigation for SPA routes.
+  useEffect(() => {
+    const handlePopState = () => {
+      const route = getInitialPage();
+      setCurrentPage(route.page);
+      setRequestedProductSlug(route.productSlug || null);
+      if (!route.productSlug) setSelectedProduct(null);
+      if (route.tab) setAdminInitialTab(route.tab);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Resolve direct product URLs after the public catalogue has loaded.
+  useEffect(() => {
+    if (!requestedProductSlug || products.length === 0) return;
+    const requestedPath = `/products/${requestedProductSlug}`;
+    const match = products.find((product) => getProductPath(product) === requestedPath);
+    setSelectedProduct(match || null);
+    setCurrentPage('product-detail');
+  }, [requestedProductSlug, products]);
+
+  // Keep browser metadata aligned with the active route and product.
+  const lastPageViewPath = useRef('');
+  useEffect(() => {
+    updatePageMetadata(currentPage, currentPage === 'product-detail' ? selectedProduct : null);
+
+    // Wait for the catalogue lookup before recording product deep-link page views.
+    if (currentPage === 'product-detail' && !selectedProduct) return;
+
+    const pagePath = window.location.pathname;
+    if (lastPageViewPath.current !== pagePath) {
+      trackPageView();
+      lastPageViewPath.current = pagePath;
+    }
+  }, [currentPage, selectedProduct]);
+
+  useEffect(() => {
+    if (currentPage !== 'product-detail' || !selectedProduct) return;
+    trackAnalyticsEvent('view_item', {
+      currency: 'USD',
+      value: selectedProduct.price,
+      items: [{
+        item_id: selectedProduct.sku || selectedProduct.id,
+        item_name: selectedProduct.name,
+        item_brand: selectedProduct.brand,
+        item_category: selectedProduct.category,
+        price: selectedProduct.price,
+        quantity: 1,
+      }],
+    });
+  }, [currentPage, selectedProduct]);
+
+  useEffect(() => {
+    if (currentPage !== 'products' || products.length === 0) return;
+    trackAnalyticsEvent('view_item_list', {
+      item_list_name: 'All truck parts',
+      items: products.slice(0, 20).map((product, index) => ({
+        item_id: product.sku || product.id,
+        item_name: product.name,
+        item_brand: product.brand,
+        item_category: product.category,
+        index,
+        price: product.price,
+      })),
+    });
+  }, [currentPage, products.length]);
 
   // 1. Initial Cache Load from IndexedDB
   useEffect(() => {
@@ -220,10 +288,23 @@ export default function App() {
   const handleNavigate = (page: NavPage, initialTab?: 'products' | 'gallery' | 'reviews' | 'orders') => {
     setCurrentPage(page);
     if (initialTab) setAdminInitialTab(initialTab);
+    if (page === 'checkout') {
+      trackAnalyticsEvent('begin_checkout', {
+        currency: 'USD',
+        value: cartItems.reduce((total, item) => total + item.product.price * item.quantity, 0),
+        items: cartItems.map((item) => ({
+          item_id: item.product.sku || item.product.id,
+          item_name: item.product.name,
+          price: item.product.price,
+          quantity: item.quantity,
+        })),
+      });
+    }
     if (typeof window !== 'undefined') {
       try {
         const targetUrl = page === 'home' ? '/' : `/${page}`;
         window.history.pushState({ page, initialTab }, '', targetUrl);
+        setRequestedProductSlug(null);
       } catch {}
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -231,12 +312,20 @@ export default function App() {
 
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
-    try {
-      sessionStorage.setItem('tpd_selected_product', JSON.stringify(product));
-    } catch {}
+    trackAnalyticsEvent('select_item', {
+      item_list_name: 'Truck parts catalogue',
+      items: [{
+        item_id: product.sku || product.id,
+        item_name: product.name,
+        item_brand: product.brand,
+        item_category: product.category,
+        price: product.price,
+      }],
+    });
+    setRequestedProductSlug(null);
     setCurrentPage('product-detail');
     if (typeof window !== 'undefined') {
-      window.history.pushState({ page: 'product-detail' }, '', '/product-detail');
+      window.history.pushState({ page: 'product-detail', productId: product.id }, '', getProductPath(product));
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -261,6 +350,18 @@ export default function App() {
       return [...prev, { product, quantity }];
     });
     setCartOpen(true);
+    trackAnalyticsEvent('add_to_cart', {
+      currency: 'USD',
+      value: product.price * quantity,
+      items: [{
+        item_id: product.sku || product.id,
+        item_name: product.name,
+        item_brand: product.brand,
+        item_category: product.category,
+        price: product.price,
+        quantity,
+      }],
+    });
   };
 
   const handleOrderNow = (product: Product, quantity = 1) => {

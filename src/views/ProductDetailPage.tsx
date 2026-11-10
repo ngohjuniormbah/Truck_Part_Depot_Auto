@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Package, ChevronRight, ChevronLeft, Check, Camera } from 'lucide-react';
 import { Product, NavPage } from '../types';
 import { ProductAsideSections } from '../components/ProductAsideSections';
+import { getProductPath } from '../utils/seo';
 
 interface ProductDetailPageProps {
   product?: Product | null;
@@ -83,9 +84,39 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     ? product.images
     : (product.image ? [product.image] : []);
   const currentPhoto = photos[selectedImageIndex] || photos[0] || product.image;
+  const productStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description || `${product.brand} ${product.model} heavy-duty truck part`,
+    image: photos.filter((url) => url.startsWith('https://') || url.startsWith('http://')),
+    sku: product.sku,
+    mpn: product.oemNumber || undefined,
+    brand: { '@type': 'Brand', name: product.brand },
+    category: product.category,
+    ...(product.price > 0
+      ? {
+          offers: {
+            '@type': 'Offer',
+            url: `https://truckpartsdepotauto.com${getProductPath(product)}`,
+            priceCurrency: 'USD',
+            price: product.price.toFixed(2),
+            availability: product.inStock
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+          },
+        }
+      : {}),
+  };
 
   return (
     <div className="bg-white text-neutral-900 min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productStructuredData).replace(/</g, '\\u003c'),
+        }}
+      />
       {/* Back Button */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
         <button
