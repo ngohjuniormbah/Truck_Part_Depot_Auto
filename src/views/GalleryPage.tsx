@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Image as ImageIcon, Camera, X } from "lucide
 import { GalleryItem } from "../types";
 
 interface GalleryPageProps {
+  isLoading?: boolean;
   galleryItems?: GalleryItem[];
   onAddGalleryItem?: (item: Partial<GalleryItem>) => Promise<void>;
   onNavigate?: (page: any, initialTab?: any) => void;
