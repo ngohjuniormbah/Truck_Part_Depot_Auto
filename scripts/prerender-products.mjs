@@ -1,6 +1,7 @@
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import dotenv from 'dotenv';
+import { getProductPath } from '../src/utils/seo-slugs.mjs';
 
 dotenv.config({ path: ['.env.local', '.env'] });
 
@@ -13,19 +14,6 @@ const pagePaths = [
   'refund-policy', 'checkout', 'admin',
 ];
 
-function slugify(value) {
-  return String(value || '')
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'part';
-}
-
-function productPath(product) {
-  const identifier = product.oem_number || product.sku || product.id;
-  return '/products/' + slugify(product.name) + '-' + slugify(identifier) + '-' + slugify(product.id);
-}
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -76,7 +64,7 @@ async function fetchProducts() {
 }
 
 function buildProductHtml(template, product) {
-  const path = productPath(product);
+  const path = getProductPath(product);
   const canonical = SITE_URL + path;
   const title = product.name + ' | ' + (product.brand || 'Diesel') + ' Truck Parts | Truck Parts Depot Auto';
   const description = cleanDescription(product) || 'View product specifications and availability from Truck Parts Depot Auto.';
@@ -160,7 +148,7 @@ const sitemapUrls = new Set([
 if (products) {
   for (const product of products) {
     if (!product.id || !product.name) continue;
-    const route = productPath(product);
+    const route = getProductPath(product);
     const destination = resolve(outputDir, route.slice(1), 'index.html');
     await mkdir(dirname(destination), { recursive: true });
     await writeFile(destination, buildProductHtml(template, product), 'utf8');
