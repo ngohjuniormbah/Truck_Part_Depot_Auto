@@ -27,6 +27,7 @@ import { CheckoutPage } from './views/CheckoutPage';
 import { AdminPage } from './views/AdminPage';
 import { sendOrderPushNotification, playOrderChime } from './utils/notifications';
 import { getProductPath, updatePageMetadata } from './utils/seo';
+import { trackAnalyticsEvent, trackPageView } from './utils/analytics';
 
 function getInitialPage(): { page: NavPage; tab?: 'products' | 'gallery' | 'reviews' | 'orders'; productSlug?: string } {
   if (typeof window === 'undefined') return { page: 'home' };
@@ -114,6 +115,35 @@ export default function App() {
   // Keep browser metadata aligned with the active route and product.
   useEffect(() => {
     updatePageMetadata(currentPage, currentPage === 'product-detail' ? selectedProduct : null);
+    trackPageView();
+
+    if (currentPage === 'product-detail' && selectedProduct) {
+      trackAnalyticsEvent('view_item', {
+        currency: 'USD',
+        value: selectedProduct.price,
+        items: [{
+          item_id: selectedProduct.sku || selectedProduct.id,
+          item_name: selectedProduct.name,
+          item_brand: selectedProduct.brand,
+          item_category: selectedProduct.category,
+          price: selectedProduct.price,
+          quantity: 1,
+        }],
+      });
+    }
+    if (currentPage === 'products' && products.length > 0) {
+      trackAnalyticsEvent('view_item_list', {
+        item_list_name: 'All truck parts',
+        items: products.slice(0, 20).map((product, index) => ({
+          item_id: product.sku || product.id,
+          item_name: product.name,
+          item_brand: product.brand,
+          item_category: product.category,
+          index,
+          price: product.price,
+        })),
+      });
+    }
   }, [currentPage, selectedProduct]);
 
   // 1. Initial Cache Load from IndexedDB
@@ -246,6 +276,18 @@ export default function App() {
   const handleNavigate = (page: NavPage, initialTab?: 'products' | 'gallery' | 'reviews' | 'orders') => {
     setCurrentPage(page);
     if (initialTab) setAdminInitialTab(initialTab);
+    if (page === 'checkout') {
+      trackAnalyticsEvent('begin_checkout', {
+        currency: 'USD',
+        value: cartItems.reduce((total, item) => total + item.product.price * item.quantity, 0),
+        items: cartItems.map((item) => ({
+          item_id: item.product.sku || item.product.id,
+          item_name: item.product.name,
+          price: item.product.price,
+          quantity: item.quantity,
+        })),
+      });
+    }
     if (typeof window !== 'undefined') {
       try {
         const targetUrl = page === 'home' ? '/' : `/${page}`;
@@ -258,6 +300,16 @@ export default function App() {
 
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
+    trackAnalyticsEvent('select_item', {
+      item_list_name: 'Truck parts catalogue',
+      items: [{
+        item_id: product.sku || product.id,
+        item_name: product.name,
+        item_brand: product.brand,
+        item_category: product.category,
+        price: product.price,
+      }],
+    });
     setRequestedProductSlug(null);
     setCurrentPage('product-detail');
     if (typeof window !== 'undefined') {
@@ -286,6 +338,18 @@ export default function App() {
       return [...prev, { product, quantity }];
     });
     setCartOpen(true);
+    trackAnalyticsEvent('add_to_cart', {
+      currency: 'USD',
+      value: product.price * quantity,
+      items: [{
+        item_id: product.sku || product.id,
+        item_name: product.name,
+        item_brand: product.brand,
+        item_category: product.category,
+        price: product.price,
+        quantity,
+      }],
+    });
   };
 
   const handleOrderNow = (product: Product, quantity = 1) => {
