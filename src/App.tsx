@@ -89,6 +89,19 @@ export default function App() {
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Support native browser back/forward navigation for SPA routes.
+  useEffect(() => {
+    const handlePopState = () => {
+      const route = getInitialPage();
+      setCurrentPage(route.page);
+      setRequestedProductSlug(route.productSlug || null);
+      if (!route.productSlug) setSelectedProduct(null);
+      if (route.tab) setAdminInitialTab(route.tab);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   // Resolve direct product URLs after the public catalogue has loaded.
   useEffect(() => {
     if (!requestedProductSlug || products.length === 0) return;
