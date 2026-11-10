@@ -26,8 +26,9 @@ import { GalleryPage } from './views/GalleryPage';
 import { CheckoutPage } from './views/CheckoutPage';
 import { AdminPage } from './views/AdminPage';
 import { sendOrderPushNotification, playOrderChime } from './utils/notifications';
+import { getProductPath, updatePageMetadata } from './utils/seo';
 
-function getInitialPage(): { page: NavPage; tab?: 'products' | 'gallery' | 'reviews' | 'orders' } {
+function getInitialPage(): { page: NavPage; tab?: 'products' | 'gallery' | 'reviews' | 'orders'; productSlug?: string } {
   if (typeof window === 'undefined') return { page: 'home' };
 
   const validPages: NavPage[] = [
@@ -57,6 +58,10 @@ function getInitialPage(): { page: NavPage; tab?: 'products' | 'gallery' | 'revi
     };
   }
 
+  if (pathParts[0] === 'products' && pathParts.length > 1) {
+    return { page: 'product-detail', productSlug: pathParts.slice(1).join('/') };
+  }
+
   for (const p of validPages) {
     if (pathParts.includes(p)) return { page: p };
   }
@@ -68,14 +73,8 @@ export default function App() {
   const initialRoute = getInitialPage();
   const [currentPage, setCurrentPage] = useState<NavPage>(initialRoute.page);
 
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(() => {
-    try {
-      const saved = sessionStorage.getItem('tpd_selected_product');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [requestedProductSlug, setRequestedProductSlug] = useState<string | null>(initialRoute.productSlug || null);
 
   const [selectedBrand, setSelectedBrand] = useState<'All' | 'Ford' | 'GMC' | 'Dodge / Ram'>('All');
   const [selectedCategory, setSelectedCategory] = useState<PartCategory | 'All'>('All');
@@ -89,6 +88,20 @@ export default function App() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Resolve direct product URLs after the public catalogue has loaded.
+  useEffect(() => {
+    if (!requestedProductSlug || products.length === 0) return;
+    const requestedPath = `/products/${requestedProductSlug}`;
+    const match = products.find((product) => getProductPath(product) === requestedPath);
+    setSelectedProduct(match || null);
+    setCurrentPage('product-detail');
+  }, [requestedProductSlug, products]);
+
+  // Keep browser metadata aligned with the active route and product.
+  useEffect(() => {
+    updatePageMetadata(currentPage, currentPage === 'product-detail' ? selectedProduct : null);
+  }, [currentPage, selectedProduct]);
 
   // 1. Initial Cache Load from IndexedDB
   useEffect(() => {
@@ -224,6 +237,7 @@ export default function App() {
       try {
         const targetUrl = page === 'home' ? '/' : `/${page}`;
         window.history.pushState({ page, initialTab }, '', targetUrl);
+        setRequestedProductSlug(null);
       } catch {}
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -231,12 +245,10 @@ export default function App() {
 
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
-    try {
-      sessionStorage.setItem('tpd_selected_product', JSON.stringify(product));
-    } catch {}
+    setRequestedProductSlug(null);
     setCurrentPage('product-detail');
     if (typeof window !== 'undefined') {
-      window.history.pushState({ page: 'product-detail' }, '', '/product-detail');
+      window.history.pushState({ page: 'product-detail', productId: product.id }, '', getProductPath(product));
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
