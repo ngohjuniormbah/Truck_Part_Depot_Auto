@@ -7,6 +7,7 @@ import { ProductAsideSections } from '../components/ProductAsideSections';
 
 interface ProductsPageProps {
   products: Product[];
+  isLoading?: boolean;
   selectedBrand?: TruckBrand;
   onSelectBrand?: (brand: TruckBrand) => void;
   selectedCategory?: PartCategory | 'All';
