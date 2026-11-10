@@ -21,9 +21,9 @@ export function initializeAnalytics(): void {
   const script = document.createElement('script');
   script.async = true;
   script.src = \`https://www.googletagmanager.com/gtag/js?id=\${encodeURIComponent(measurementId)}\`;
-  script.onload = () => window.gtag?.('config', measurementId, { send_page_view: false });
   document.head.appendChild(script);
   window.gtag('js', new Date());
+  window.gtag('config', measurementId, { send_page_view: false });
 
   analyticsInitialized = true;
 }
