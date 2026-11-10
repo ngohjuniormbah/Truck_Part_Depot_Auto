@@ -12,7 +12,7 @@ function slugify(value) {
   return String(value || '')
     .toLowerCase()
     .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\\u0300-\\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '') || 'part';
 }
@@ -20,11 +20,12 @@ function slugify(value) {
 const staticPaths = [
   '/', '/products', '/services', '/about', '/reviews', '/gallery', '/contact', '/refund-policy',
 ];
-const urls = new Set(staticPaths.map((path) => \`\${SITE_URL}\${path}\`));
+const urls = new Set(staticPaths.map((path) => SITE_URL + path));
 
 if (supabaseUrl && supabaseKey) {
   const products = [];
   const pageSize = 1000;
+
   for (let offset = 0; ; offset += pageSize) {
     const endpoint = new URL('/rest/v1/products', supabaseUrl);
     endpoint.search = new URLSearchParams({
@@ -35,31 +36,47 @@ if (supabaseUrl && supabaseKey) {
     }).toString();
 
     const response = await fetch(endpoint, {
-      headers: { apikey: supabaseKey, Authorization: \`Bearer \${supabaseKey}\` },
+      headers: {
+        apikey: supabaseKey,
+        Authorization: 'Bearer ' + supabaseKey,
+      },
     });
+
     if (!response.ok) {
-      throw new Error(\`Unable to generate product sitemap: Supabase returned \${response.status}\`);
+      throw new Error('Unable to generate product sitemap: Supabase returned ' + response.status);
     }
 
     const page = await response.json();
-    if (!Array.isArray(page)) throw new Error('Supabase returned an unexpected products response.');
+    if (!Array.isArray(page)) {
+      throw new Error('Supabase returned an unexpected products response.');
+    }
+
     products.push(...page);
     if (page.length < pageSize) break;
   }
 
   for (const product of products) {
     const identifier = product.oem_number || product.sku || product.id;
-    const slug = \`\${slugify(product.name)}-\${slugify(identifier)}-\${slugify(product.id)}\`;
-    urls.add(\`\${SITE_URL}/products/\${slug}\`);
+    const slug = slugify(product.name) + '-' + slugify(identifier) + '-' + slugify(product.id);
+    urls.add(SITE_URL + '/products/' + slug);
   }
-  console.log(\`Added \${products.length} product URLs to sitemap.\`);
+
+  console.log('Added ' + products.length + ' product URLs to sitemap.');
 } else {
-  console.warn('Supabase public credentials are missing; generated a static-only sitemap. Configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in the production build environment to include product URLs.');
+  console.warn(
+    'Supabase public credentials are missing; generated a static-only sitemap. ' +
+    'Configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in the production build environment to include product URLs.'
+  );
 }
 
-const xml = \`<?xml version="1.0" encoding="UTF-8"?>\n\` +
-  \`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n\` +
-  [...urls].sort().map((url) => \`  <url><loc>\${url.replace(/&/g, '&amp;')}</loc></url>\`).join('\n') +
+const urlEntries = [...urls].sort().map((url) => {
+  return '  <url><loc>' + url.replace(/&/g, '&amp;') + '</loc></url>';
+});
+
+const xml =
+  '<?xml version="1.0" encoding="UTF-8"?>\n' +
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+  urlEntries.join('\n') +
   '\n</urlset>\n';
 
 await writeFile(resolve('public/sitemap.xml'), xml, 'utf8');
