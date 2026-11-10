@@ -113,38 +113,50 @@ export default function App() {
   }, [requestedProductSlug, products]);
 
   // Keep browser metadata aligned with the active route and product.
+  const lastPageViewPath = useRef('');
   useEffect(() => {
     updatePageMetadata(currentPage, currentPage === 'product-detail' ? selectedProduct : null);
-    trackPageView();
 
-    if (currentPage === 'product-detail' && selectedProduct) {
-      trackAnalyticsEvent('view_item', {
-        currency: 'USD',
-        value: selectedProduct.price,
-        items: [{
-          item_id: selectedProduct.sku || selectedProduct.id,
-          item_name: selectedProduct.name,
-          item_brand: selectedProduct.brand,
-          item_category: selectedProduct.category,
-          price: selectedProduct.price,
-          quantity: 1,
-        }],
-      });
-    }
-    if (currentPage === 'products' && products.length > 0) {
-      trackAnalyticsEvent('view_item_list', {
-        item_list_name: 'All truck parts',
-        items: products.slice(0, 20).map((product, index) => ({
-          item_id: product.sku || product.id,
-          item_name: product.name,
-          item_brand: product.brand,
-          item_category: product.category,
-          index,
-          price: product.price,
-        })),
-      });
+    // Wait for the catalogue lookup before recording product deep-link page views.
+    if (currentPage === 'product-detail' && !selectedProduct) return;
+
+    const pagePath = window.location.pathname;
+    if (lastPageViewPath.current !== pagePath) {
+      trackPageView();
+      lastPageViewPath.current = pagePath;
     }
   }, [currentPage, selectedProduct]);
+
+  useEffect(() => {
+    if (currentPage !== 'product-detail' || !selectedProduct) return;
+    trackAnalyticsEvent('view_item', {
+      currency: 'USD',
+      value: selectedProduct.price,
+      items: [{
+        item_id: selectedProduct.sku || selectedProduct.id,
+        item_name: selectedProduct.name,
+        item_brand: selectedProduct.brand,
+        item_category: selectedProduct.category,
+        price: selectedProduct.price,
+        quantity: 1,
+      }],
+    });
+  }, [currentPage, selectedProduct]);
+
+  useEffect(() => {
+    if (currentPage !== 'products' || products.length === 0) return;
+    trackAnalyticsEvent('view_item_list', {
+      item_list_name: 'All truck parts',
+      items: products.slice(0, 20).map((product, index) => ({
+        item_id: product.sku || product.id,
+        item_name: product.name,
+        item_brand: product.brand,
+        item_category: product.category,
+        index,
+        price: product.price,
+      })),
+    });
+  }, [currentPage, products.length]);
 
   // 1. Initial Cache Load from IndexedDB
   useEffect(() => {
