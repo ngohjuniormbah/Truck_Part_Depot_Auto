@@ -4,4 +4,4 @@ Allow: /
 Disallow: /admin
 Disallow: /admin/
 
-Sitemap: https://truckpartsdepotauto.com/sitemap.xml
+Sitemap: https://truckpartdepotauto.com/sitemap.xml

@@ -9,15 +9,15 @@ This implementation adds durable product-specific URLs, crawlable product anchor
 Client-side metadata and JSON-LD are not a substitute for server-rendered or pre-rendered product HTML. The next major engineering milestone is to render public product pages at build time or on the server, include product data in the initial HTML, and return correct HTTP status codes (200 for valid products, 404 for missing products). Evaluate migration of the public storefront to an SSR-capable framework if needed. Do not treat this current change as full server-side SEO.
 
 ## Sitemap generation
-The production build runs `scripts/generate-sitemap.mjs`. Configure these Vercel build environment variables:
+Vercel runs `npm run build`, which executes `vite build` and then `scripts/prerender-products.mjs`. That prerender script writes `dist/sitemap.xml` from the public static routes and product rows fetched from Supabase. Vite first copies `public/sitemap.xml`; `scripts/generate-sitemap.mjs` can regenerate that checked-in static file. Both generation scripts use `https://truckpartdepotauto.com` as the canonical site URL. Production builds require the following Vercel environment variables; Preview builds without them produce a static-only sitemap:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
 Use the Supabase anon/public key, never a service-role key. The products table must allow public SELECT of the product fields used on the storefront. If credentials are configured but the product query fails, the build fails rather than silently publishing an incomplete product sitemap. Without credentials, the script emits a static-only sitemap and warns.
 
 ## Google Search Console
-1. Add and verify the Domain property `truckpartsdepotauto.com` with the DNS TXT record issued by Google.
-2. Submit `https://truckpartsdepotauto.com/sitemap.xml`.
+1. Add and verify the Domain property `truckpartdepotauto.com` with the DNS TXT record issued by Google.
+2. Submit `https://truckpartdepotauto.com/sitemap.xml`.
 3. Use URL Inspection on the homepage, products catalogue and representative product URL. Inspect rendered HTML, selected canonical, crawl allowance and indexability.
 4. Review Page Indexing for discovered-but-not-indexed, crawled-but-not-indexed, duplicate canonical, soft 404 and 404 patterns.
 5. Review Core Web Vitals and HTTPS/security reports.

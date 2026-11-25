@@ -24,11 +24,19 @@ for (const file of required) {
 }
 
 const sitemap = await readFile(resolve(dist, 'sitemap.xml'), 'utf8');
-if (!sitemap.includes('https://truckpartdepotauto.com/')) {
+const canonicalOrigin = 'https://truckpartdepotauto.com';
+const sitemapUrls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1].replace(/&amp;/g, '&'));
+if (!sitemapUrls.includes(canonicalOrigin + '/')) {
   throw new Error('Sitemap is missing the canonical homepage URL.');
 }
-if (sitemap.includes('truckpartsdepotauto.com')) {
-  throw new Error('Sitemap contains the incorrect hostname truckpartsdepotauto.com.');
+if (sitemapUrls.length === 0 || sitemapUrls.some((url) => {
+  try {
+    return new URL(url).origin !== canonicalOrigin;
+  } catch {
+    return true;
+  }
+})) {
+  throw new Error('Sitemap contains a URL with an invalid or unexpected origin.');
 }
 if (sitemap.includes('/checkout') || sitemap.includes('/admin')) {
   throw new Error('Transactional or admin URLs must not appear in the sitemap.');
