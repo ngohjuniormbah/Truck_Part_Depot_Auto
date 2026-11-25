@@ -3,7 +3,7 @@ import { getProductPath, slugify } from './seo-slugs.mjs';
 
 export { getProductPath, slugify } from './seo-slugs.mjs';
 
-export const SITE_URL = 'https://truckpartsdepotauto.com';
+export const SITE_URL = 'https://truckpartdepotauto.com';
 
 
 type PageMetadata = { title: string; description: string };

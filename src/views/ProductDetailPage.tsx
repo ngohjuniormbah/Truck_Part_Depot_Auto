@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Package, ChevronRight, ChevronLeft, Check, Camera } from 'lucide-react';
 import { Product, NavPage } from '../types';
 import { ProductAsideSections } from '../components/ProductAsideSections';
-import { getProductPath } from '../utils/seo';
+import { getProductPath, SITE_URL } from '../utils/seo';
 
 interface ProductDetailPageProps {
   product?: Product | null;
@@ -98,7 +98,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       ? {
           offers: {
             '@type': 'Offer',
-            url: `https://truckpartsdepotauto.com${getProductPath(product)}`,
+            url: `${SITE_URL}${getProductPath(product)}`,
             priceCurrency: 'USD',
             price: product.price.toFixed(2),
             availability: product.inStock

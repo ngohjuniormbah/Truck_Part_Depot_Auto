@@ -87,7 +87,7 @@ This is a **code/configuration audit**, not a verified live crawl or Search Cons
 - Data source: Supabase client-side catalogue.
 - Product detail route: `/products/{slug}`.
 - Static sitemap paths: homepage, products, services, about, reviews, gallery, contact and refund policy.
-- robots.txt excludes admin paths and points to `https://truckpartsdepotauto.com/sitemap.xml`.
+- robots.txt excludes admin paths and points to `https://truckpartdepotauto.com/sitemap.xml`.
 - Product schema currently includes product name, description, images, SKU/MPN, brand, category and conditional offer/availability.
 - GA4 events implemented in code: page_view, view_item_list, select_item, view_item, add_to_cart and begin_checkout. A purchase event is intentionally omitted while payment remains pending verification.
 - Public Supabase anon key is a browser key by design; database access must be constrained by Row Level Security. Never expose a service-role key.
