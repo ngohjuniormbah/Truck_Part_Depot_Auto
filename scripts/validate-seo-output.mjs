@@ -24,8 +24,11 @@ for (const file of required) {
 }
 
 const sitemap = await readFile(resolve(dist, 'sitemap.xml'), 'utf8');
-if (!sitemap.includes('https://truckpartsdepotauto.com/')) {
+if (!sitemap.includes('https://truckpartdepotauto.com/')) {
   throw new Error('Sitemap is missing the canonical homepage URL.');
+}
+if (sitemap.includes('truckpartsdepotauto.com')) {
+  throw new Error('Sitemap contains the incorrect hostname truckpartsdepotauto.com.');
 }
 if (sitemap.includes('/checkout') || sitemap.includes('/admin')) {
   throw new Error('Transactional or admin URLs must not appear in the sitemap.');
